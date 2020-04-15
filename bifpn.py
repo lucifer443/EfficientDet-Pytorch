@@ -2,23 +2,22 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from mmcv.cnn import xavier_init
-from mmcv.cnn import constant_init, kaiming_init
-from torch.nn.modules.batchnorm import _BatchNorm
-
 
 from mmdet.core import auto_fp16
 from ..registry import NECKS
-from ..utils import ConvModule
+from mmdet.ops import ConvModule
+from ..utils import SeparableConv2d, MemoryEfficientSwish
+
 
 class WeightedMerge(nn.Module):
     def __init__(self, in_channels, out_channels, target_size, norm_cfg, apply_bn=False, eps=0.0001):
         super(WeightedMerge, self).__init__()
-        self.conv = SeparableConv2d(out_channels, out_channels, 3, padding=1)
+        self.conv = SeparableConv2d(out_channels, out_channels, 3, padding=1, norm_cfg=norm_cfg, bias=True)
         self.eps = eps
         self.num_ins = len(in_channels)
         self.weight = nn.Parameter(torch.Tensor(self.num_ins).fill_(1))
         self.relu = nn.ReLU(inplace=False)
-        self.swish = Swish()
+        self.swish = MemoryEfficientSwish()
         self.resample_ops = nn.ModuleList()
         for in_c in in_channels:
             self.resample_ops.append(Resample(in_c, out_channels, target_size, norm_cfg, apply_bn))
@@ -43,7 +42,7 @@ class Resample(nn.Module):
                 out_channels,
                 1,
                 norm_cfg=norm_cfg if not apply_bn else None,
-                activation=None,
+                act_cfg=None,
                 inplace=False)
 
     def _resize(self, x, size):
@@ -60,35 +59,6 @@ class Resample(nn.Module):
     def forward(self, inputs):
         feat = self.conv(inputs)
         return self._resize(feat, self.target_size)
-
-
-class SeparableConv2d(nn.Module):
-    def __init__(self, in_channels,
-                 out_channels,
-                 kernel_size=1,
-                 stride=1,
-                 padding=0,
-                 dilation=1,
-                 bias=False):
-        super(SeparableConv2d, self).__init__()
-        self.depthwise = nn.Conv2d(in_channels, in_channels, kernel_size,
-                               stride, padding, dilation, groups=in_channels, bias=bias)
-        self.pointwise = ConvModule(in_channels, out_channels, 1,
-                                    norm_cfg=dict(type='BN', momentum=0.003, eps=1e-4, requires_grad=True), activation=None, inplace=False)
-
-    def forward(self, x):
-        x = self.depthwise(x)
-        x = self.pointwise(x)
-        return x
-
-
-class Swish(nn.Module):
-    def __init__(self):
-        super(Swish, self).__init__()
-
-    def forward(self, x):
-        x = x * F.sigmoid(x)
-        return x
 
 
 class bifpn_layer(nn.Module):
@@ -119,6 +89,11 @@ class bifpn_layer(nn.Module):
             merge_op = WeightedMerge(in_channels_list, out_channels, target_size_list[i+1], norm_cfg, apply_bn=True)
             self.bottom_up_merge.append(merge_op)
 
+    def init_weights(self):
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                xavier_init(m, distribution='uniform')
+
     def forward(self, inputs):
         assert len(inputs) == self.num_outs
 
@@ -134,13 +109,6 @@ class bifpn_layer(nn.Module):
             outputs[i] = self.bottom_up_merge[i-1]([md_x[i], inputs[i], outputs[i-1]])
         outputs.append(self.bottom_up_merge[-1]([inputs[-1], outputs[-1]]))
         return outputs
-
-    def init_weights(self):
-        for m in self.modules():
-            if isinstance(m, nn.Conv2d):
-                kaiming_init(m)
-            elif isinstance(m, (_BatchNorm, nn.GroupNorm)):
-                constant_init(m, 1)
 
 
 @NECKS.register_module
@@ -195,6 +163,11 @@ class BiFPN(nn.Module):
                             norm_cfg=norm_cfg))
             in_channels = [out_channels] * self.num_outs
 
+    def init_weights(self):
+        for m in self.modules():
+            if isinstance(m, SeparableConv2d):
+                m.init_weights()
+
     @auto_fp16()
     def forward(self, inputs):
         outs = list(inputs)
@@ -206,9 +179,3 @@ class BiFPN(nn.Module):
 
         return tuple(outs[:self.num_outs])
 
-    def init_weights(self):
-        for m in self.modules():
-            if isinstance(m, nn.Conv2d):
-                kaiming_init(m)
-            elif isinstance(m, (_BatchNorm, nn.GroupNorm)):
-                constant_init(m, 1)
