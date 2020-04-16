@@ -1,6 +1,6 @@
 import numpy as np
 import torch.nn as nn
-from mmcv.cnn import normal_init, constant_init, kaiming_init
+from mmcv.cnn import kaiming_init
 
 from ..registry import HEADS
 from ..utils import bias_init_with_prob, SeparableConv2d
@@ -18,7 +18,6 @@ class RetinaSepConvHead(AnchorHead):
 
     def __init__(self,
                  num_classes,
-                 num_ins,
                  in_channels,
                  stacked_convs=4,
                  octave_base_scale=4,
@@ -29,7 +28,6 @@ class RetinaSepConvHead(AnchorHead):
         self.octave_base_scale = octave_base_scale
         self.scales_per_octave = scales_per_octave
         self.norm_cfg = norm_cfg
-        self.num_ins = num_ins
         octave_scales = np.array(
             [2**(i / scales_per_octave) for i in range(scales_per_octave)])
         anchor_scales = octave_scales * octave_base_scale
@@ -60,17 +58,17 @@ class RetinaSepConvHead(AnchorHead):
                     stride=1,
                     padding=1,
                     activation="Swish",
+                    bias=True,
                     norm_cfg=self.norm_cfg))
         self.retina_cls = SeparableConv2d(
             self.feat_channels,
             self.num_anchors * self.cls_out_channels,
             3,
             padding=1,
-            activation="Swish",
             bias=True,
             norm_cfg=None)
         self.retina_reg = SeparableConv2d(
-            self.feat_channels, self.num_anchors * 4, 3, padding=1, activation="Swish", bias=True, norm_cfg=None)
+            self.feat_channels, self.num_anchors * 4, 3, padding=1, bias=True, norm_cfg=None)
 
     def init_weights(self):
         for m in self.cls_convs:

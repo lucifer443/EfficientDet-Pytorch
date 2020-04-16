@@ -292,14 +292,14 @@ def efficientnet(width_coefficient=None, depth_coefficient=None, dropout_rate=0.
     blocks_args = [
         'r1_k3_s11_e1_i32_o16_se0.25', 'r2_k3_s22_e6_i16_o24_se0.25',
         'r2_k5_s22_e6_i24_o40_se0.25', 'r3_k3_s22_e6_i40_o80_se0.25',
-        'r3_k5_s22_e6_i80_o112_se0.25', 'r4_k5_s22_e6_i112_o192_se0.25',
-        'r1_k3_s22_e6_i192_o320_se0.25',
+        'r3_k5_s11_e6_i80_o112_se0.25', 'r4_k5_s22_e6_i112_o192_se0.25',
+        'r1_k3_s11_e6_i192_o320_se0.25',
     ]
     blocks_args = BlockDecoder.decode(blocks_args)
 
     global_params = GlobalParams(
-        batch_norm_momentum=0.997, #0.99 -> 0.997
-        batch_norm_epsilon=1e-4, #1e-3 -> 1e-4
+        batch_norm_momentum=0.99, #0.99 -> 0.997
+        batch_norm_epsilon=1e-3, #1e-3 -> 1e-4
         dropout_rate=dropout_rate,
         drop_connect_rate=drop_connect_rate,
         # data_format='channels_last',  # removed, this is always true in PyTorch

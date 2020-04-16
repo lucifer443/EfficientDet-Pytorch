@@ -89,11 +89,6 @@ class bifpn_layer(nn.Module):
             merge_op = WeightedMerge(in_channels_list, out_channels, target_size_list[i+1], norm_cfg, apply_bn=True)
             self.bottom_up_merge.append(merge_op)
 
-    def init_weights(self):
-        for m in self.modules():
-            if isinstance(m, nn.Conv2d):
-                xavier_init(m, distribution='uniform')
-
     def forward(self, inputs):
         assert len(inputs) == self.num_outs
 

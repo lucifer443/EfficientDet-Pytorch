@@ -1,6 +1,6 @@
 cudnn_benchmark = True
 # model settings
-norm_cfg = dict(type='BN', momentum=0.003, eps=1e-4, requires_grad=True)
+norm_cfg = dict(type='BN', momentum=0.01, eps=1e-3, requires_grad=True)
 model = dict(
     type='RetinaNet',
     pretrained='pretrained/adv-efficientnet-b0-b64d5a18.pth',
@@ -21,7 +21,6 @@ model = dict(
     bbox_head=dict(
         type='RetinaSepConvHead',
         num_classes=81,
-        num_ins=5,
         in_channels=64,
         stacked_convs=3,
         feat_channels=64,
@@ -38,7 +37,7 @@ model = dict(
             gamma=1.5,
             alpha=0.25,
             loss_weight=1.0),
-        loss_bbox=dict(type='SmoothL1Loss', beta=0.1, loss_weight=1.0)))
+        loss_bbox=dict(type='SmoothL1Loss', beta=0.1, loss_weight=50.0/4)))
 # training and testing settings
 train_cfg = dict(
     assigner=dict(
@@ -93,7 +92,7 @@ test_pipeline = [
         ])
 ]
 data = dict(
-    imgs_per_gpu=8,
+    imgs_per_gpu=16,
     workers_per_gpu=4,
     train=dict(
         type=dataset_type,
@@ -114,7 +113,7 @@ evaluation = dict(interval=1, metric='bbox')
 # optimizer
 optimizer = dict(
     type='SGD',
-    lr=0.01,
+    lr=0.08,
     momentum=0.9,
     weight_decay=4e-5,
     paramwise_options=dict(norm_decay_mult=0))
@@ -123,7 +122,7 @@ optimizer_config = dict(grad_clip=dict(max_norm=10, norm_type=2))
 lr_config = dict(
     policy='cosine',
     warmup='linear',
-    warmup_iters=1000,
+    warmup_iters=2000,
     warmup_ratio=0.001)
 checkpoint_config = dict(interval=10)
 # yapf:disable
