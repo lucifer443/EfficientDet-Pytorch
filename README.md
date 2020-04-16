@@ -32,12 +32,12 @@ It is based on the
    cp -r configs/ ${MMDETECTION_PATH}/
    ```
 
- 3. Prepare data
+ 3. **Prepare data**
 
      The directories should be arranged like this:
      
         >   mmdetection
-        > 	├── mmdet
+        > 	  ├── mmdet
         >     ├── tools
         >     ├── configs
         >     ├── data
@@ -48,20 +48,20 @@ It is based on the
         >     │   │   ├── test2017
 
 
- 4. Train D0 with 4 GPUs
+ 4. **Train D0 with 4 GPUs**
 
     ```shell
     CONFIG_FILE=configs/efficientdet/efficientdet_d0_4gpu.py
     ./ tools/dist_train.py ${CONFIG_FILE} 4
     ```
 
- 5. Calculate parameters and flops
+ 5. **Calculate parameters and flops**
 
      ```shell
       python tools/get_flops.py ${CONFIG_FILE} --shape $SIZE $SIZE
      ```
 
-6. Test 
+6. **Test**
 
    ```shell
    python tools/test.py ${CONFIG_FILE} ${CHECKPOINT_FILE} --out  ${OUTPUT_FILE} --eval bbox
