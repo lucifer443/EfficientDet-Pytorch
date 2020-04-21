@@ -21,6 +21,7 @@ model = dict(
     bbox_head=dict(
         type='RetinaSepConvHead',
         num_classes=81,
+        num_ins=5,
         in_channels=64,
         stacked_convs=3,
         feat_channels=64,
@@ -123,7 +124,7 @@ lr_config = dict(
     policy='cosine',
     warmup='linear',
     warmup_iters=2000,
-    warmup_ratio=0.001)
+    warmup_ratio=0.008)
 checkpoint_config = dict(interval=10)
 # yapf:disable
 log_config = dict(
@@ -134,7 +135,7 @@ log_config = dict(
     ])
 # yapf:enable
 # runtime settings
-total_epochs = 50
+total_epochs = 300
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
 work_dir = './efficientdet_d0'

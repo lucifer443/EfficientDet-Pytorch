@@ -11,7 +11,7 @@ It is based on the
 
 | Variant | mAP(val2017) | Params | FLOPs | mAP(val2017) in paper | Params in paper | FLOPs in paper |
 | ------- | ------------ | ------ | ----- | --------------------- | --------------- | -------------- |
-| D0      | 31.6         | 4.1M   | 2.7B  | 33.5                  | 3.9M            | 2.5B           |
+| D0      |              | 3.87M  | 2.55B | 33.5                  | 3.9M            | 2.5B           |
 | D1      |              |        |       | 39.1                  | 6.6M            | 6.1B           |
 | D2      |              |        |       | 42.5                  | 8.1M            | 11B            |
 | D3      |              |        |       | 45.9                  | 12M             | 25B            |
@@ -37,7 +37,7 @@ It is based on the
      The directories should be arranged like this:
      
         >   mmdetection
-        > 	  ├── mmdet
+        >  ├── mmdet
         >     ├── tools
         >     ├── configs
         >     ├── data
@@ -71,6 +71,7 @@ More usages can reference [mmdetection documentation](https://mmdetection.readth
 
 ## Update log
 
+- [2020-04-20] fix some bug in bifpn and use separate BN in head
 - [2020-04-17] add efficientdet-d0 training config
 - [2020-04-16] add efficientnet.py and retina_sepconv_head.py
 - [2020-04-06] create this repository.

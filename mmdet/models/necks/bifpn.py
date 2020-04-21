@@ -38,12 +38,15 @@ class Resample(nn.Module):
     def __init__(self, in_channels, out_channels, target_size, norm_cfg, apply_bn=False):
         super(Resample, self).__init__()
         self.target_size = torch.Size([target_size, target_size])
-        self.conv = ConvModule(in_channels,
-                out_channels,
-                1,
-                norm_cfg=norm_cfg if not apply_bn else None,
-                act_cfg=None,
-                inplace=False)
+        self.is_conv = in_channels != out_channels
+        if self.is_conv:
+            self.conv = ConvModule(in_channels,
+                    out_channels,
+                    1,
+                    norm_cfg=norm_cfg if apply_bn else None,
+                    bias=True,
+                    act_cfg=None,
+                    inplace=False)
 
     def _resize(self, x, size):
         if x.shape[-2:] == size:
@@ -57,8 +60,9 @@ class Resample(nn.Module):
             return x
 
     def forward(self, inputs):
-        feat = self.conv(inputs)
-        return self._resize(feat, self.target_size)
+        if self.is_conv:
+            inputs = self.conv(inputs)
+        return self._resize(inputs, self.target_size)
 
 
 class bifpn_layer(nn.Module):
@@ -80,7 +84,8 @@ class bifpn_layer(nn.Module):
 
         self.top_down_merge = nn.ModuleList()
         for i in range(self.num_outs - 1, 0, -1):
-            merge_op = WeightedMerge([in_channels[i], in_channels[i-1]], out_channels, target_size_list[i-1], norm_cfg, apply_bn=True)
+            in_channels_list = [out_channels, in_channels[i-1]] if i < self.num_outs - 1 else [in_channels[i], in_channels[i-1]]
+            merge_op = WeightedMerge(in_channels_list, out_channels, target_size_list[i-1], norm_cfg, apply_bn=True)
             self.top_down_merge.append(merge_op)
 
         self.bottom_up_merge = nn.ModuleList()
@@ -95,13 +100,14 @@ class bifpn_layer(nn.Module):
         # top down merge
         md_x = []
         for i in range(self.num_outs - 1, 0, -1):
-            x = self.top_down_merge[self.num_outs-i-1]([inputs[i], inputs[i-1]])
+            inputs_list = [md_x[-1], inputs[i-1]] if i < self.num_outs - 1 else [inputs[i], inputs[i-1]]
+            x = self.top_down_merge[self.num_outs-i-1](inputs_list)
             md_x.append(x)
 
         # bottom up merge
         outputs = md_x[::-1]
         for i in range(1, self.num_outs - 1):
-            outputs[i] = self.bottom_up_merge[i-1]([md_x[i], inputs[i], outputs[i-1]])
+            outputs[i] = self.bottom_up_merge[i-1]([outputs[i], inputs[i], outputs[i-1]])
         outputs.append(self.bottom_up_merge[-1]([inputs[-1], outputs[-1]]))
         return outputs
 
