@@ -16,6 +16,7 @@ from functools import partial
 
 from mmcv.runner import load_checkpoint
 from ..utils import MemoryEfficientSwish, Swish
+from mmdet.ops import build_norm_layer
 
 from ..registry import BACKBONES
 
@@ -124,7 +125,7 @@ class MBConvBlock(nn.Module):
         has_se (bool): Whether the block contains a Squeeze and Excitation layer.
     """
 
-    def __init__(self, block_args, global_params):
+    def __init__(self, block_args, global_params, norm_cfg):
         super().__init__()
         self._block_args = block_args
         self._bn_mom = 1 - global_params.batch_norm_momentum
@@ -140,7 +141,7 @@ class MBConvBlock(nn.Module):
         oup = self._block_args.input_filters * self._block_args.expand_ratio  # number of output channels
         if self._block_args.expand_ratio != 1:
             self._expand_conv = Conv2d(in_channels=inp, out_channels=oup, kernel_size=1, bias=False)
-            self._bn0 = nn.BatchNorm2d(num_features=oup, momentum=self._bn_mom, eps=self._bn_eps)
+            self._bn0 = build_norm_layer(norm_cfg, num_features=oup, postfix=0)[1]
 
         # Depthwise convolution phase
         k = self._block_args.kernel_size
@@ -148,7 +149,7 @@ class MBConvBlock(nn.Module):
         self._depthwise_conv = Conv2d(
             in_channels=oup, out_channels=oup, groups=oup,  # groups makes it depthwise
             kernel_size=k, stride=s, bias=False)
-        self._bn1 = nn.BatchNorm2d(num_features=oup, momentum=self._bn_mom, eps=self._bn_eps)
+        self._bn1 = build_norm_layer(norm_cfg, num_features=oup, postfix=1)[1]
 
         # Squeeze and Excitation layer, if desired
         if self.has_se:
@@ -159,7 +160,7 @@ class MBConvBlock(nn.Module):
         # Output phase
         final_oup = self._block_args.output_filters
         self._project_conv = Conv2d(in_channels=oup, out_channels=final_oup, kernel_size=1, bias=False)
-        self._bn2 = nn.BatchNorm2d(num_features=final_oup, momentum=self._bn_mom, eps=self._bn_eps)
+        self._bn2 = build_norm_layer(norm_cfg, num_features=final_oup, postfix=2)[1]
         self._swish = MemoryEfficientSwish()
 
     def forward(self, inputs, drop_connect_rate=None):
@@ -361,6 +362,7 @@ class EfficientNet(nn.Module):
     def __init__(self, 
                 arch='efficientnet-b0', 
                 out_indices=[4, 5, 6, 7, 8],
+                norm_cfg=dict(type="BN"),
                 norm_eval=True,
                 override_params=None):
         super(EfficientNet, self).__init__()
@@ -384,7 +386,7 @@ class EfficientNet(nn.Module):
         in_channels = 3  # rgb
         out_channels = round_filters(32, self._global_params)  # number of output channels
         self._conv_stem = Conv2d(in_channels, out_channels, kernel_size=3, stride=2, bias=False)
-        self._bn0 = nn.BatchNorm2d(num_features=out_channels, momentum=bn_mom, eps=bn_eps)
+        self._bn0 = build_norm_layer(norm_cfg, num_features=out_channels, postfix=0)[1]
 
         # Build blocks
         self._blocks = nn.ModuleList([])
@@ -399,11 +401,11 @@ class EfficientNet(nn.Module):
             )
 
             # The first block needs to take care of stride and filter size increase.
-            self._blocks.append(MBConvBlock(block_args, self._global_params))
+            self._blocks.append(MBConvBlock(block_args, self._global_params, norm_cfg))
             if block_args.num_repeat > 1:
                 block_args = block_args._replace(input_filters=block_args.output_filters, stride=1)
             for _ in range(block_args.num_repeat - 1):
-                self._blocks.append(MBConvBlock(block_args, self._global_params))
+                self._blocks.append(MBConvBlock(block_args, self._global_params, norm_cfg))
             # last_stage_idx
             cum_idx += block_args.num_repeat
             self.per_last_stage_idx.append(cum_idx)
@@ -524,7 +526,7 @@ class EfficientNet(nn.Module):
         if mode and self.norm_eval:
             for m in self.modules():
                 # trick: eval have effect on BatchNorm only
-                if isinstance(m, nn.BatchNorm2d):
+                if isinstance(m, nn.BatchNorm2d) or isinstance(m, nn.SyncBatchNorm):
                     m.eval()
 
 

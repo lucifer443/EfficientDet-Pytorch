@@ -1,21 +1,21 @@
 cudnn_benchmark = True
 # model settings
-norm_cfg = dict(type='SyncBN', momentum=0.01, eps=1e-3, requires_grad=True)  # using SyncBN during training
+norm_cfg = dict(type='BN', momentum=0.01, eps=1e-3, requires_grad=True)  # using SyncBN during training
 model = dict(
     type='RetinaNet',
-    pretrained='pretrained/adv-efficientnet-b0-b64d5a18.pth',
+    pretrained='pretrained/efficientnet-b5-b6417697.pth',
     backbone=dict(
         type='EfficientNet',
-        arch='efficientnet-b0',
+        arch='efficientnet-b5',
         out_indices=[4, 6, 8],
         norm_cfg=norm_cfg,
         norm_eval=False),
     neck=dict(
         type='BiFPN',
-        in_channels=[40, 112, 320],
-        target_size_list=[64, 32, 16, 8, 4],
-        out_channels=64,
-        stack=3,
+        in_channels=[64, 176, 512],
+        target_size_list=[160, 80, 40, 20, 10],
+        out_channels=288,
+        stack=7,
         start_level=0,
         norm_cfg=norm_cfg,
         num_outs=5),
@@ -23,9 +23,9 @@ model = dict(
         type='RetinaSepConvHead',
         num_classes=81,
         num_ins=5,
-        in_channels=64,
-        stacked_convs=3,
-        feat_channels=64,
+        in_channels=288,
+        stacked_convs=4,
+        feat_channels=288,
         octave_base_scale=4,
         scales_per_octave=3,
         anchor_ratios=[0.5, 1.0, 2.0],
@@ -62,7 +62,7 @@ dataset_type = 'CocoDataset'
 data_root = 'data/coco/'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
-img_size = 512
+img_size = 1280
 train_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(type='LoadAnnotations', with_bbox=True),
@@ -94,7 +94,7 @@ test_pipeline = [
         ])
 ]
 data = dict(
-    imgs_per_gpu=16,
+    imgs_per_gpu=8,
     workers_per_gpu=4,
     train=dict(
         type=dataset_type,
@@ -139,7 +139,7 @@ log_config = dict(
 total_epochs = 300
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-work_dir = './efficientdet_d0'
+work_dir = './efficientdet_d5'
 load_from = None
 resume_from = None
 workflow = [('train', 1)]

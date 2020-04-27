@@ -9,15 +9,15 @@ It is based on the
 
 ## Models
 
-| Variant | mAP(val2017) | Params | FLOPs | mAP(val2017) in paper | Params in paper | FLOPs in paper |
-| ------- | ------------ | ------ | ----- | --------------------- | --------------- | -------------- |
-| D0      |              | 3.87M  | 2.55B | 33.5                  | 3.9M            | 2.5B           |
-| D1      |              |        |       | 39.1                  | 6.6M            | 6.1B           |
-| D2      |              |        |       | 42.5                  | 8.1M            | 11B            |
-| D3      |              |        |       | 45.9                  | 12M             | 25B            |
-| D4      |              |        |       | 49.0                  | 21M             | 55B            |
-| D5      |              |        |       | 50.5                  | 34M             | 135B           |
-| D6      |              |        |       | 51.3                  | 52M             | 226B           |
+| Variant | mAP(val2017) | Params | FLOPs   | mAP(val2017) in paper | Params in paper | FLOPs in paper |
+| ------- | ------------ | ------ | ------- | --------------------- | --------------- | -------------- |
+| D0      | 32.02        | 3.87M  | 2.55B   | 33.5                  | 3.9M            | 2.5B           |
+| D1      |              | 6.62M  | 6.12B   | 39.1                  | 6.6M            | 6.1B           |
+| D2      |              | 8.09M  | 11B     | 42.5                  | 8.1M            | 11B            |
+| D3      |              | 12.02M | 24.88B  | 45.9                  | 12M             | 25B            |
+| D4      |              | 20.7M  | 55.13B  | 49.0                  | 21M             | 55B            |
+| D5      |              | 33.63M | 135.31B | 50.5                  | 34M             | 135B           |
+| D6      |              |        |         | 51.3                  | 52M             | 226B           |
 
 ## Usage
 
@@ -37,7 +37,7 @@ It is based on the
      The directories should be arranged like this:
      
         >   mmdetection
-        >  ├── mmdet
+        >     ├── mmdet
         >     ├── tools
         >     ├── configs
         >     ├── data
@@ -71,10 +71,11 @@ More usages can reference [mmdetection documentation](https://mmdetection.readth
 
 ## Update log
 
-- [2020-04-20] fix some bug in bifpn and use separate BN in head
-- [2020-04-17] add efficientdet-d0 training config
-- [2020-04-16] add efficientnet.py and retina_sepconv_head.py
-- [2020-04-06] create this repository.
+- [2020-04-27] Update results and add SyncBN in backbone.
+- [2020-04-20] Fix some bug in bifpn and use separate BN in head.
+- [2020-04-17] Add efficientdet-d0 training config.
+- [2020-04-16] Add efficientnet.py and retina_sepconv_head.py.
+- [2020-04-06] Create this repository.
 
 ## Notice
 
