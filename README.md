@@ -12,12 +12,12 @@ It is based on the
 | Variant | mAP(val2017) | Params | FLOPs   | mAP(val2017) in paper | Params in paper | FLOPs in paper |
 | ------- | ------------ | ------ | ------- | --------------------- | --------------- | -------------- |
 | D0      | 32.02        | 3.87M  | 2.55B   | 33.5                  | 3.9M            | 2.5B           |
-| D1      |              | 6.62M  | 6.12B   | 39.1                  | 6.6M            | 6.1B           |
-| D2      |              | 8.09M  | 11B     | 42.5                  | 8.1M            | 11B            |
-| D3      |              | 12.02M | 24.88B  | 45.9                  | 12M             | 25B            |
-| D4      |              | 20.7M  | 55.13B  | 49.0                  | 21M             | 55B            |
-| D5      |              | 33.63M | 135.31B | 50.5                  | 34M             | 135B           |
-| D6      |              |        |         | 51.3                  | 52M             | 226B           |
+| D1      | 37.78        | 6.62M  | 6.12B   | 39.1                  | 6.6M            | 6.1B           |
+| D2      | ——           | 8.09M  | 11B     | 42.5                  | 8.1M            | 11B            |
+| D3      | ——           | 12.02M | 24.88B  | 45.9                  | 12M             | 25B            |
+| D4      | ——           | 20.7M  | 55.13B  | 49.0                  | 21M             | 55B            |
+| D5      | ——           | 33.63M | 135.31B | 50.5                  | 34M             | 135B           |
+| D6      | ——           | ——     | ——      | 51.3                  | 52M             | 226B           |
 
 ## Usage
 
@@ -79,8 +79,10 @@ More usages can reference [mmdetection documentation](https://mmdetection.readth
 
 ## Notice
 
-1. The number of bifpn in the latest version of paper is a little different from the first version, but the parameters and flops are the same. I use the structure in the latest version of paper.
-2. Training from scratch is a time-consuming task. For exmaple, it took me 4 days to train D0 from scratch using 4 GTX TiTAN V GPUs.
+1. For small reason, I can't release the model. But you can reproduce the result easily using the config file that I provide.
+2.  I find the training procedure of EfficientDet is unstable and  there is a small chance that results can be 3% mAP lower.
+3. The number of bifpn in the latest version of paper is a little different from the first version, but the parameters and flops are the same. I use the structure in the latest version of paper.
+4. Training from scratch is a time-consuming task. For exmaple, it took me 4 days to train D0 from scratch using 4 GTX TiTAN V GPUs.
 
 
 
